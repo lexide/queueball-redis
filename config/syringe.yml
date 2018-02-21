@@ -15,13 +15,13 @@ services:
                 port: "%redis.port%"
 
     redisQueue:
-        class: Silktide\QueueBall\Redis\Queue
+        class: Lexide\QueueBall\Redis\Queue
         arguments:
             - "@redisClient"
-            - "@silktide_queueball.messageFactory"
+            - "@lexide_queueball.messageFactory"
             - "%defaultQueue%"
 
     # set the sqs queue to be default
-    silktide_queueball.defaultQueue:
+    lexide_queueball.defaultQueue:
         aliasOf: "@redisQueue"
 

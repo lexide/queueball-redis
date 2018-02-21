@@ -1,11 +1,11 @@
 <?php
 
-namespace Silktide\QueueBall\Redis;
+namespace Lexide\QueueBall\Redis;
 
 use Predis\Client;
-use Silktide\QueueBall\Message\QueueMessage;
-use Silktide\QueueBall\Message\QueueMessageFactoryInterface;
-use Silktide\QueueBall\Queue\AbstractQueue;
+use Lexide\QueueBall\Message\QueueMessage;
+use Lexide\QueueBall\Message\QueueMessageFactoryInterface;
+use Lexide\QueueBall\Queue\AbstractQueue;
 
 /**
  * Queue
