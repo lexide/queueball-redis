@@ -4,8 +4,8 @@
   "license": "MIT",
   "homepage": "https://github.com/lexide/queueball-redis",
   "require": {
-    "php": ">=5.4.0",
-    "predis/predis": "^1.0",
+    "php": ">=7.2.0",
+    "predis/predis": "^2.2.0",
     "lexide/queueball": "^3.0.0"
   },
   "require-dev": {
