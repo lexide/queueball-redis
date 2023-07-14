@@ -2,6 +2,7 @@
 
 namespace Lexide\QueueBall\Redis;
 
+use Lexide\QueueBall\Exception\QueueException;
 use Predis\Client;
 use Lexide\QueueBall\Message\QueueMessage;
 use Lexide\QueueBall\Message\QueueMessageFactoryInterface;
@@ -13,49 +14,64 @@ use Lexide\QueueBall\Queue\AbstractQueue;
 class Queue extends AbstractQueue
 {
 
-    /**
-     * @var Client
-     */
-    protected $predis;
+    protected Client $predis;
+
+    protected QueueMessageFactoryInterface $messageFactory;
+
+    protected array $receivedMessages = [];
+
+    protected int $receivedMessageCounter = 0;
 
     /**
-     * @var QueueMessageFactoryInterface
+     * @param Client $predis
+     * @param QueueMessageFactoryInterface $messageFactory
+     * @param ?string $queueId
      */
-    protected $messageFactory;
-
-    protected $receivedMessages = [];
-    protected $receivedMessageCounter = 0;
-
-    public function __construct(Client $predis, QueueMessageFactoryInterface $messageFactory, $queueId = null)
+    public function __construct(Client $predis, QueueMessageFactoryInterface $messageFactory, ?string $queueId = null)
     {
         $this->predis = $predis;
         $this->messageFactory = $messageFactory;
 
         parent::__construct($queueId);
 
-        // make sure the destruct method is called
+        // make sure the destruct method is called in the event a non-graceful exit
         register_shutdown_function([$this, "__destruct"]);
     }
 
-    public function createQueue($queueId, $options = [])
+    /**
+     * {@inheritDoc}
+     */
+    public function createQueue(string $queueId, array $options = []): void
     {
         // Nothing to do, Redis queues are created if they do not exist
     }
 
-    public function deleteQueue($queueId = null)
+    /**
+     * {@inheritDoc}
+     * @throws QueueException
+     */
+    public function deleteQueue(?string $queueId = null)
     {
         $queueId = $this->normaliseQueueId($queueId);
 
         $this->predis->del($queueId);
     }
 
-    public function sendMessage($messageBody, $queueId = null)
+    /**
+     * {@inheritDoc}
+     * @throws QueueException
+     */
+    public function sendMessage(string $messageBody, ?string $queueId = null): void
     {
         $queueId = $this->normaliseQueueId($queueId);
         $this->predis->rpush($queueId, [$messageBody]);
     }
 
-    public function receiveMessage($queueId = null, $waitTime = 0)
+    /**
+     * {@inheritDoc}
+     * @throws QueueException
+     */
+    public function receiveMessage(?string$queueId = null, float|int|null $waitTime = 0): ?QueueMessage
     {
         $queueId = $this->normaliseQueueId($queueId);
         if (empty($waitTime)) {
@@ -66,7 +82,6 @@ class Queue extends AbstractQueue
             return null;
         }
 
-        /** @var QueueMessage $queueMessage */
         $queueMessage = $this->messageFactory->createMessage($message[1], $queueId);
         
         $index = $this->receivedMessageCounter++;
@@ -76,27 +91,39 @@ class Queue extends AbstractQueue
         return $queueMessage;
     }
 
-    public function completeMessage(QueueMessage $message)
+    /**
+     * {@inheritDoc}
+     */
+    public function completeMessage(QueueMessage $message): void
     {
         // all we have to do is remove the reference to this message in receivedMessages
         unset($this->receivedMessages[$message->getReceiptId()]);
     }
 
-    public function returnMessage(QueueMessage $message)
+    /**
+     * {@inheritDoc}
+     */
+    public function returnMessage(QueueMessage $message): void
     {
         // re-add the message to the queue, as the first element
-        $this->predis->lpush($message->getQueueId(), $message->getMessage());
+        $this->predis->lpush($message->getQueueId(), [$message->getMessage()]);
         // forget we received the message
         $this->completeMessage($message);
     }
 
-    public function normaliseQueueId($queueId = null) {
+    /**
+     * @param ?string $queueId
+     * @return string
+     * @throws QueueException
+     */
+    public function normaliseQueueId(?string $queueId = null): string
+    {
         if (empty($queueId)) {
             return $this->getQueueId();
         }
         return $queueId;
     }
-    
+
     public function __destruct()
     {
         foreach ($this->receivedMessages as $message) {
