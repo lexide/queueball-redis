@@ -32,10 +32,16 @@ class PredisClientFactory
         if (count($hosts) > 1 && empty($options["cluster"])) {
             $options["cluster"] = $this->defaultClusterType;
         }
+
         $clientParameters = [];
         foreach ($hosts as $host) {
             $clientParameters[] = array_merge($this->defaultHostParameters, $hostParameters, ["host" => $host]);
         }
+
+        if (count($clientParameters) == 1) {
+            $clientParameters = $clientParameters[0];
+        }
+
         return new Client($clientParameters, $options);
     }
 
