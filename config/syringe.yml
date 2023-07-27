@@ -1,27 +1,43 @@
 parameters:
-    redis.scheme: "tcp"
-    redis.host: "localhost"
-    redis.port: 6379
+    scheme: "tcp"
+    host: "localhost"
+    port: 6379
+    ssl.caFile: ~
+    ssl.localCert: ~
+    ssl.verifyPeer: ~
 
-    defaultQueue: null
+    clusterType: "redis"
+
+    parameters.standard:
+        scheme: "%scheme%"
+        host: "%host%"
+        port: "%port%"
+        ssl:
+            cafile: "%ssl.caFile%"
+            local_cert: "%ssl.localCert%"
+            verify_peer: "%ssl.verifyPeer%"
+
+    defaultQueueKey: null
 
 services:
-    redisClient:
+    client:
         class: Predis\Client
         arguments:
-            -
-                scheme: "%redis.scheme%"
-                host: "%redis.host%"
-                port: "%redis.port%"
+            - "%parameters.standard%"
 
-    redisQueue:
+    clientFactory:
+        class: Lexide\QueueBall\Redis\PredisClientFactory
+        arguments:
+            - "%parameters.standard%"
+            - "%clusterType%"
+
+    queue:
         class: Lexide\QueueBall\Redis\Queue
         arguments:
-            - "@redisClient"
+            - "@client"
             - "@lexide_queueball.messageFactory"
-            - "%defaultQueue%"
+            - "%defaultQueueKey%"
 
-    # set the sqs queue to be default
     lexide_queueball.defaultQueue:
-        aliasOf: "@redisQueue"
+        aliasOf: "@queue"
 

@@ -4,25 +4,36 @@
   "license": "MIT",
   "homepage": "https://github.com/lexide/queueball-redis",
   "require": {
-    "php": ">=5.4.0",
-    "predis/predis": "^1.0",
-    "lexide/queueball": "^3.0.0"
+    "php": ">=8.0.0",
+    "predis/predis": "^2.2.0",
+    "lexide/queueball": "~4.0.1"
   },
   "require-dev": {
-    "phpunit/phpunit": "4.*",
-    "mockery/mockery": "0.9.*",
-    "lexide/pharmacist": "~1.0.0"
+    "phpunit/phpunit": "^9.5",
+    "mockery/mockery": "^1.6.0",
+    "lexide/pharmacist": "~2.0.0"
   },
   "autoload": {
     "psr-4": {
-      "Lexide\\QueueBall\\Redis\\": "src",
+      "Lexide\\QueueBall\\Redis\\": "src"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
       "Lexide\\QueueBall\\Redis\\Test\\": "test"
     }
   },
   "extra": {
     "lexide/puzzle-di": {
-      "lexide/syringe": {
-        "path": "config/syringe.yml"
+      "files": {
+        "lexide/syringe": {
+          "path": "config/syringe.yml"
+        }
+      },
+      "whitelist": {
+        "lexide/syringe": [
+          "lexide/queueball"
+        ]
       }
     }
   }
