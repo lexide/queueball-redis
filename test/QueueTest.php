@@ -2,6 +2,7 @@
 
 namespace Lexide\QueueBall\Redis\Test;
 
+use Lexide\QueueBall\Exception\QueueException;
 use Lexide\QueueBall\Message\QueueMessage;
 use Lexide\QueueBall\Message\QueueMessageFactoryInterface;
 use Lexide\QueueBall\Redis\Queue;
@@ -9,6 +10,7 @@ use Mockery\Adapter\Phpunit\MockeryPHPUnitIntegration;
 use Mockery\MockInterface;
 use PHPUnit\Framework\TestCase;
 use Predis\Client;
+use Predis\ClientException;
 
 class QueueTest extends TestCase
 {
@@ -90,6 +92,33 @@ class QueueTest extends TestCase
 
         $queue->__destruct();
         $queue->__destruct(); // ensure messages are tracked properly
+    }
+
+    public function testExceptionWhenSending()
+    {
+        $this->expectException(QueueException::class);
+        $this->client->shouldReceive("rpush")->andThrow(ClientException::class);
+
+        $queue = new Queue($this->client, $this->messageFactory, "foo");
+        $queue->sendMessage("blah");
+    }
+
+    public function testExceptionWhenReceiving()
+    {
+        $this->expectException(QueueException::class);
+        $this->client->shouldReceive("blpop")->andThrow(ClientException::class);
+
+        $queue = new Queue($this->client, $this->messageFactory, "foo");
+        $queue->receiveMessage();
+    }
+
+    public function testExceptionWhenDeleting()
+    {
+        $this->expectException(QueueException::class);
+        $this->client->shouldReceive("del")->andThrow(ClientException::class);
+
+        $queue = new Queue($this->client, $this->messageFactory, "foo");
+        $queue->deleteQueue();
     }
 
 }

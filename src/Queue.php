@@ -7,6 +7,7 @@ use Predis\Client;
 use Lexide\QueueBall\Message\QueueMessage;
 use Lexide\QueueBall\Message\QueueMessageFactoryInterface;
 use Lexide\QueueBall\Queue\AbstractQueue;
+use Predis\PredisException;
 
 /**
  * Queue
@@ -50,11 +51,15 @@ class Queue extends AbstractQueue
      * {@inheritDoc}
      * @throws QueueException
      */
-    public function deleteQueue(?string $queueId = null)
+    public function deleteQueue(?string $queueId = null): void
     {
         $queueId = $this->normaliseQueueId($queueId);
 
-        $this->predis->del($queueId);
+        try {
+            $this->predis->del($queueId);
+        } catch (PredisException $e) {
+            throw new QueueException("Predis error: {$e->getMessage()}", previous: $e);
+        }
     }
 
     /**
@@ -64,7 +69,11 @@ class Queue extends AbstractQueue
     public function sendMessage(string $messageBody, ?string $queueId = null): void
     {
         $queueId = $this->normaliseQueueId($queueId);
-        $this->predis->rpush($queueId, [$messageBody]);
+        try {
+            $this->predis->rpush($queueId, [$messageBody]);
+        } catch (PredisException $e) {
+            throw new QueueException("Predis error: {$e->getMessage()}", previous: $e);
+        }
     }
 
     /**
@@ -77,7 +86,12 @@ class Queue extends AbstractQueue
         if (empty($waitTime)) {
             $waitTime = $this->waitTime;
         }
-        $message = $this->predis->blpop([$queueId], $waitTime);
+        try {
+            $message = $this->predis->blpop([$queueId], $waitTime);
+        } catch (PredisException $e) {
+            throw new QueueException("Predis error: {$e->getMessage()}", previous: $e);
+        }
+
         if (empty($message[1])) {
             return null;
         }
@@ -102,11 +116,17 @@ class Queue extends AbstractQueue
 
     /**
      * {@inheritDoc}
+     * @throws QueueException
      */
     public function returnMessage(QueueMessage $message): void
     {
         // re-add the message to the queue, as the first element
-        $this->predis->lpush($message->getQueueId(), [$message->getMessage()]);
+        try {
+            $this->predis->lpush($message->getQueueId(), [$message->getMessage()]);
+        } catch (PredisException $e) {
+            throw new QueueException("Predis error: {$e->getMessage()}", previous: $e);
+        }
+
         // forget we received the message
         $this->completeMessage($message);
     }
