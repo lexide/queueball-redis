@@ -4,7 +4,7 @@ namespace Lexide\QueueBall\Redis;
 
 use Predis\Client;
 
-class PredisClientFactory
+class RedisClientFactory
 {
 
     protected array $defaultHostParameters;
