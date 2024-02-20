@@ -94,7 +94,7 @@ class LazyRedisWrapper
             $arg = $args[$i];
             if (in_array($arg, ["EX", "PX"])) {
                 ++$i; // advance the arg counter to the next value
-                $options[$arg] = $args[$i];
+                $options[$arg] = (int) $args[$i];
 
             } else {
                 $options[] = $arg;
@@ -126,11 +126,11 @@ class LazyRedisWrapper
         }
 
         $options = [];
-        if (!empty($this->parameters["ssl"])) {
+        if (!empty($this->parameters["ssl"]) && is_array($this->parameters["ssl"])) {
             $options["ssl"] = array_filter([
-                "cafile" => $this->parameters["caFile"] ?? null,
-                "local_cert" => $this->parameters["localCert"] ?? null,
-                "verify_peer" => $this->parameters["verifyPeer"] ?? null
+                "cafile" => $this->parameters["ssl"]["caFile"] ?? null,
+                "local_cert" => $this->parameters["ssl"]["localCert"] ?? null,
+                "verify_peer" => $this->parameters["ssl"]["verifyPeer"] ?? null
             ], fn($value) => !is_null($value));
         }
 
@@ -143,11 +143,11 @@ class LazyRedisWrapper
 
         $this->redis->connect(
             $this->parameters["host"],
-            $this->parameters["port"],
-            $this->parameters["connectTimeout"],
+            $this->parameters["port"] ?? 6379,
+            $this->parameters["connectTimeout"] ?? 0,
             '',
             0,
-            $this->parameters["readTimeout"],
+            $this->parameters["readTimeout"] ?? 0,
             $options
         );
     }
