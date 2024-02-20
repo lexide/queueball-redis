@@ -2,47 +2,42 @@
 
 namespace Lexide\QueueBall\Redis;
 
-use Predis\Client;
+use Lexide\QueueBall\Exception\QueueException;
 
 class RedisClientFactory
 {
 
-    protected array $defaultHostParameters;
-
-    protected string $defaultClusterType;
+    protected array $defaultParameters;
 
     /**
-     * @param array $defaultHostParameters
-     * @param string $defaultClusterType
+     * @param array $defaultParameters
      */
-    public function __construct(array $defaultHostParameters, string $defaultClusterType)
+    public function __construct(array $defaultParameters)
     {
-        $this->defaultHostParameters = $defaultHostParameters;
-        $this->defaultClusterType = $defaultClusterType;
+        $this->defaultParameters = $defaultParameters;
     }
 
     /**
-     * @param array $hosts
-     * @param array $hostParameters
-     * @param array $options
-     * @return Client
+     * @param array $parameters
+     * @return LazyRedisWrapper
+     * @throws QueueException
+     * @throws \RedisClusterException
      */
-    public function create(array $hosts, array $hostParameters = [], array $options = []): Client
+    public function create(array $parameters): LazyRedisWrapper
     {
-        if (count($hosts) > 1 && empty($options["cluster"])) {
-            $options["cluster"] = $this->defaultClusterType;
+        $clientParameters = array_merge($this->defaultParameters, $parameters);
+
+        $host = $clientParameters["host"] ?? null;
+
+        if (empty($host)) {
+            throw new QueueException("Cannot create Redis client. No host supplied in parameters");
         }
 
-        $clientParameters = [];
-        foreach ($hosts as $host) {
-            $clientParameters[] = array_merge($this->defaultHostParameters, $hostParameters, ["host" => $host]);
-        }
+        $client = is_array($host)
+            ? new \RedisCluster(null, $host)
+            : new \Redis($host);
 
-        if (count($clientParameters) == 1) {
-            $clientParameters = $clientParameters[0];
-        }
-
-        return new Client($clientParameters, $options);
+        return new LazyRedisWrapper($client, $clientParameters);
     }
 
 }
