@@ -35,7 +35,7 @@ class RedisClientFactory
 
         $client = is_array($host)
             ? new \RedisCluster(null, $host)
-            : new \Redis($host);
+            : new \Redis(["host" => $host]);
 
         return new LazyRedisWrapper($client, $clientParameters);
     }
