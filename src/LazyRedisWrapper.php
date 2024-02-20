@@ -80,6 +80,43 @@ class LazyRedisWrapper
     }
 
     /**
+     * @param string $key
+     * @param mixed $value
+     * @param string|int|float ...$args
+     * @return bool
+     * @throws \RedisException
+     */
+    public function set(string $key, mixed $value, string|int|float ...$args): bool
+    {
+        $options = [];
+        $argCount = count($args);
+        for ($i = 0; $i < $argCount; ++$i) {
+            $arg = $args[$i];
+            if (in_array($arg, ["EX", "PX"])) {
+                ++$i; // advance the arg counter to the next value
+                $options[$arg] = $args[$i];
+
+            } else {
+                $options[] = $arg;
+            }
+        }
+
+        $this->connect();
+        return $this->redis->set($key, $value, $options);
+    }
+
+    /**
+     * @param string $key
+     * @return string|false
+     * @throws \RedisException
+     */
+    public function get(string $key): string|false
+    {
+        $this->connect();
+        return $this->redis->get($key);
+    }
+
+    /**
      * @throws \RedisException
      */
     protected function connect(): void
