@@ -12,9 +12,9 @@ parameters:
         host: "%scheme%://%host%"
         port: "%port%"
         ssl:
-            cafile: "%ssl.caFile%"
-            local_cert: "%ssl.localCert%"
-            verify_peer: "%ssl.verifyPeer%"
+            caFile: "%ssl.caFile%"
+            localCert: "%ssl.localCert%"
+            verifyPeer: "%ssl.verifyPeer%"
 
     defaultQueueKey: null
 
