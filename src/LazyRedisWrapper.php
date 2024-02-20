@@ -58,6 +58,28 @@ class LazyRedisWrapper
     }
 
     /**
+     * @param string $prefix
+     * @return array
+     * @throws \RedisException
+     */
+    public function keys(string $prefix): array
+    {
+        $this->connect();
+        return $this->redis->keys($prefix);
+    }
+
+    /**
+     * @param string $key
+     * @return int
+     * @throws \RedisException
+     */
+    public function llen(string $key): int
+    {
+        $this->connect();
+        return $this->redis->llen($key);
+    }
+
+    /**
      * @throws \RedisException
      */
     protected function connect(): void
