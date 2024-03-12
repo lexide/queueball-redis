@@ -9,27 +9,27 @@ parameters:
     clusterType: "redis"
 
     parameters.standard:
-        scheme: "%scheme%"
-        host: "%host%"
+        host: "%scheme%://%host%"
         port: "%port%"
         ssl:
-            cafile: "%ssl.caFile%"
-            local_cert: "%ssl.localCert%"
-            verify_peer: "%ssl.verifyPeer%"
+            caFile: "%ssl.caFile%"
+            localCert: "%ssl.localCert%"
+            verifyPeer: "%ssl.verifyPeer%"
 
     defaultQueueKey: null
 
 services:
     client:
-        class: Predis\Client
+        class: Lexide\QueueBall\Redis\LazyRedisWrapper
+        factoryService: "@clientFactory"
+        factoryMethod: "create"
         arguments:
             - "%parameters.standard%"
 
     clientFactory:
-        class: Lexide\QueueBall\Redis\PredisClientFactory
+        class: Lexide\QueueBall\Redis\RedisClientFactory
         arguments:
             - "%parameters.standard%"
-            - "%clusterType%"
 
     queue:
         class: Lexide\QueueBall\Redis\Queue

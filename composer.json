@@ -5,7 +5,7 @@
   "homepage": "https://github.com/lexide/queueball-redis",
   "require": {
     "php": ">=8.0.0",
-    "predis/predis": "^2.2.0",
+    "ext-redis": "*",
     "lexide/queueball": "~4.0.1"
   },
   "require-dev": {

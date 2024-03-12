@@ -3,11 +3,9 @@
 namespace Lexide\QueueBall\Redis;
 
 use Lexide\QueueBall\Exception\QueueException;
-use Predis\Client;
 use Lexide\QueueBall\Message\QueueMessage;
 use Lexide\QueueBall\Message\QueueMessageFactoryInterface;
 use Lexide\QueueBall\Queue\AbstractQueue;
-use Predis\PredisException;
 
 /**
  * Queue
@@ -15,7 +13,7 @@ use Predis\PredisException;
 class Queue extends AbstractQueue
 {
 
-    protected Client $predis;
+    protected LazyRedisWrapper $redis;
 
     protected QueueMessageFactoryInterface $messageFactory;
 
@@ -24,13 +22,13 @@ class Queue extends AbstractQueue
     protected int $receivedMessageCounter = 0;
 
     /**
-     * @param Client $predis
+     * @param LazyRedisWrapper $redis
      * @param QueueMessageFactoryInterface $messageFactory
      * @param ?string $queueId
      */
-    public function __construct(Client $predis, QueueMessageFactoryInterface $messageFactory, ?string $queueId = null)
+    public function __construct(LazyRedisWrapper $redis, QueueMessageFactoryInterface $messageFactory, ?string $queueId = null)
     {
-        $this->predis = $predis;
+        $this->redis = $redis;
         $this->messageFactory = $messageFactory;
 
         parent::__construct($queueId);
@@ -56,9 +54,9 @@ class Queue extends AbstractQueue
         $queueId = $this->normaliseQueueId($queueId);
 
         try {
-            $this->predis->del($queueId);
-        } catch (PredisException $e) {
-            throw new QueueException("Predis error: {$e->getMessage()}", previous: $e);
+            $this->redis->del($queueId);
+        } catch (\RedisException $e) {
+            throw new QueueException("Redis error: {$e->getMessage()}", previous: $e);
         }
     }
 
@@ -70,9 +68,9 @@ class Queue extends AbstractQueue
     {
         $queueId = $this->normaliseQueueId($queueId);
         try {
-            $this->predis->rpush($queueId, [$messageBody]);
-        } catch (PredisException $e) {
-            throw new QueueException("Predis error: {$e->getMessage()}", previous: $e);
+            $this->redis->rpush($queueId, $messageBody);
+        } catch (\RedisException $e) {
+            throw new QueueException("Redis error: {$e->getMessage()}", previous: $e);
         }
     }
 
@@ -87,9 +85,9 @@ class Queue extends AbstractQueue
             $waitTime = $this->waitTime;
         }
         try {
-            $message = $this->predis->blpop([$queueId], $waitTime);
-        } catch (PredisException $e) {
-            throw new QueueException("Predis error: {$e->getMessage()}", previous: $e);
+            $message = $this->redis->blpop($queueId, $waitTime);
+        } catch (\RedisException $e) {
+            throw new QueueException("Redis error: {$e->getMessage()}", previous: $e);
         }
 
         if (empty($message[1])) {
@@ -122,9 +120,9 @@ class Queue extends AbstractQueue
     {
         // re-add the message to the queue, as the first element
         try {
-            $this->predis->lpush($message->getQueueId(), [$message->getMessage()]);
-        } catch (PredisException $e) {
-            throw new QueueException("Predis error: {$e->getMessage()}", previous: $e);
+            $this->redis->lpush($message->getQueueId(), $message->getMessage());
+        } catch (\RedisException $e) {
+            throw new QueueException("Redis error: {$e->getMessage()}", previous: $e);
         }
 
         // forget we received the message
