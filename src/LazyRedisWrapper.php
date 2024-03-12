@@ -56,7 +56,7 @@ class LazyRedisWrapper
     /**
      * @param string $key
      * @param int|float $timeout
-     * @return array|null
+     * @return ?array
      * @throws \RedisException
      */
     public function blpop(string $key, int|float $timeout): array|null
