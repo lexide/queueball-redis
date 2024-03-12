@@ -8,6 +8,10 @@ class LazyRedisWrapper
     protected \Redis|\RedisCluster $redis;
     protected array $parameters;
 
+    /**
+     * @param \Redis|\RedisCluster $redis
+     * @param array $parameters
+     */
     public function __construct(\Redis|\RedisCluster $redis, array $parameters)
     {
         $this->redis = $redis;
@@ -126,6 +130,7 @@ class LazyRedisWrapper
         }
 
         $options = [];
+        // handle SSL
         if (!empty($this->parameters["ssl"]) && is_array($this->parameters["ssl"])) {
             $options["ssl"] = array_filter([
                 "cafile" => $this->parameters["ssl"]["caFile"] ?? null,
@@ -134,6 +139,7 @@ class LazyRedisWrapper
             ], fn($value) => !is_null($value));
         }
 
+        // handle auth
         if (!empty($this->parameters["username"]) && !empty($this->parameters["password"])) {
             $options["auth"] = [
                 $this->parameters["username"],
@@ -151,6 +157,7 @@ class LazyRedisWrapper
             $this->parameters["readTimeout"] ?? 0,
             $options
         ];
+
         if ($isPersistent) {
             $this->redis->pconnect(...$args);
         } else {
