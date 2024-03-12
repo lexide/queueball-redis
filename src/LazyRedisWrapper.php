@@ -23,7 +23,8 @@ class LazyRedisWrapper
      * @return int
      * @throws \RedisException
      */
-    public function del(string $key): int {
+    public function del(string $key): int
+    {
         $this->connect();
         return $this->redis->del($key);
     }
@@ -34,7 +35,8 @@ class LazyRedisWrapper
      * @return int
      * @throws \RedisException
      */
-    public function lpush(string $key, string $value): int {
+    public function lpush(string $key, string $value): int
+    {
         $this->connect();
         return $this->redis->lpush($key, $value);
     }
@@ -45,7 +47,8 @@ class LazyRedisWrapper
      * @return int
      * @throws \RedisException
      */
-    public function rpush(string $key, string $value): int {
+    public function rpush(string $key, string $value): int
+    {
         $this->connect();
         return $this->redis->rpush($key, $value);
     }
@@ -56,7 +59,8 @@ class LazyRedisWrapper
      * @return array|null
      * @throws \RedisException
      */
-    public function blpop(string $key, int|float $timeout): array|null {
+    public function blpop(string $key, int|float $timeout): array|null
+    {
         $this->connect();
         return $this->redis->blpop($key, $timeout) ?: null;
     }
