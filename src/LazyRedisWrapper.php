@@ -59,7 +59,7 @@ class LazyRedisWrapper
      * @return ?array
      * @throws \RedisException
      */
-    public function blpop(string $key, int|float $timeout): array|null
+    public function blpop(string $key, int|float $timeout): ?array
     {
         $this->connect();
         return $this->redis->blpop($key, $timeout) ?: null;
