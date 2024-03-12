@@ -137,19 +137,25 @@ class LazyRedisWrapper
         if (!empty($this->parameters["username"]) && !empty($this->parameters["password"])) {
             $options["auth"] = [
                 $this->parameters["username"],
-                $this->parameters["password"],
+                $this->parameters["password"]
             ];
         }
 
-        $this->redis->connect(
+        $isPersistent = !empty($this->parameters["persistent"]);
+        $args = [
             $this->parameters["host"],
             $this->parameters["port"] ?? 6379,
             $this->parameters["connectTimeout"] ?? 0,
-            '',
+            $isPersistent ? $this->parameters["persistent"] : null,
             0,
             $this->parameters["readTimeout"] ?? 0,
             $options
-        );
+        ];
+        if ($isPersistent) {
+            $this->redis->pconnect(...$args);
+        } else {
+            $this->redis->connect(...$args);
+        }
     }
 
 }
