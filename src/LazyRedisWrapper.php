@@ -99,7 +99,7 @@ class LazyRedisWrapper
         $args = array_merge(["iterator" => $cursor], array_filter($args));
 
         do {
-            yield from $this->redis->scan(... $args);
+            yield from $this->redis->scan(... $args) ?: [];
         } while (($cursor ?? 0) > 0);
     }
 
