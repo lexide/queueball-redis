@@ -77,6 +77,33 @@ class LazyRedisWrapper
     }
 
     /**
+     * Note: DO NOT use keys from this generator function, there may well be duplicate indexes
+     *
+     * @param ?string $match
+     * @param ?string $type
+     * @param int $count
+     * @return \Generator
+     * @throws \RedisException
+     */
+    public function scan(?string $match = null, ?string $type = null, int $count = 100): \Generator
+    {
+        $this->connect();
+        $cursor = null;
+
+        $args = [
+            "pattern" => $match,
+            "count" => $count,
+            "type" => $type
+        ];
+
+        $args = array_merge(["iterator" => $cursor], array_filter($args));
+
+        do {
+            yield from $this->redis->scan(... $args);
+        } while (($cursor ?? 0) > 0);
+    }
+
+    /**
      * @param string $key
      * @return int
      * @throws \RedisException
