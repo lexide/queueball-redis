@@ -96,7 +96,7 @@ class LazyRedisWrapper
             "type" => $type
         ];
 
-        $args = array_merge(["iterator" => $cursor], array_filter($args));
+        $args = array_merge(["iterator" => &$cursor], array_filter($args));
 
         do {
             yield from $this->redis->scan(... $args) ?: [];
